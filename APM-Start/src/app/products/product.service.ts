@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 
 import { catchError, Observable, tap, throwError } from 'rxjs';
 
@@ -14,13 +14,12 @@ export class ProductService {
   
   constructor(private http: HttpClient) { }
 
-  getProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.productsUrl)
+  products$ = this.http.get<Product[]>(this.productsUrl)
       .pipe(
         tap(data => console.log('Products: ', JSON.stringify(data))),
         catchError(this.handleError)
       );
-  }
+  
 
   private fakeProduct(): Product {
     return {
