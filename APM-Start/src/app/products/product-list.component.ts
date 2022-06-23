@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { catchError, EMPTY, Observable } from 'rxjs';
-import { ProductCategory } from '../product-categories/product-category';
+import { BehaviorSubject, catchError, combineLatest, EMPTY, map, tap } from 'rxjs';
+import { ProductCategoryService } from '../product-categories/product-category.service';
 
-import { Product } from './product';
 import { ProductService } from './product.service';
 
 @Component({
@@ -11,33 +10,56 @@ import { ProductService } from './product.service';
   styleUrls: ['./product-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProductListComponent implements OnInit {
+export class ProductListComponent {
   pageTitle = 'Product List';
   errorMessage = '';
-  categories: ProductCategory[] = [];
+  private categorySelectedSubject = new BehaviorSubject<number>(0);
+  categotySelectedAction$ = this.categorySelectedSubject.asObservable();
 
-
-  constructor(private productService: ProductService) { }
-  ngOnInit(): void {
-    throw new Error('Method not implemented.');
-  }
-
-
-  products$: Observable<Product[]> = this.productService.products$
-      .pipe(
-        catchError((err) => {
-          this.errorMessage = err;
-          return EMPTY
-         }
-        )
-      )
   
+  constructor(private productService: ProductService, private productCategoryService: ProductCategoryService) { }
+
+
+  category$ = this.productCategoryService.$productCategories$
+    .pipe(
+      tap(data => console.log(data)),
+      catchError((err) => {
+        this.errorMessage = err;
+        return EMPTY
+      }
+      )
+    )
+
+  // products$: Observable<Product[]> = this.productService.productWithCategory$
+  //   .pipe(
+  //     tap(data => console.log(data)),
+  //     catchError((err) => {
+  //       this.errorMessage = err;
+  //       return EMPTY
+  //     }
+  //     )
+  //   )
+
+    products$ = combineLatest([
+      this.productService.productWithCategory$, 
+      this.categotySelectedAction$
+    ])
+    .pipe(
+      map(([products, selectedCategoryId]) =>
+        products.filter(product => selectedCategoryId ? product.categoryId === selectedCategoryId : true)
+      ),
+      catchError((err) => {
+        this.errorMessage = err;
+        return EMPTY
+      }),
+      tap(data => console.log(data))
+    )
 
   onAdd(): void {
     console.log('Not yet implemented');
   }
 
   onSelected(categoryId: string): void {
-    console.log('Not yet implemented');
+    this.categorySelectedSubject.next(+categoryId);
   }
 }

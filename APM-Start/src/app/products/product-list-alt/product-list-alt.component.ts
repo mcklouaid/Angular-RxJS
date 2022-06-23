@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
-
-
+import { catchError, EMPTY, tap } from 'rxjs';
 import { Product } from '../product';
 import { ProductService } from '../product.service';
 
@@ -17,7 +16,15 @@ export class ProductListAltComponent {
 
   constructor(private productService: ProductService) { }
 
-  products$ = this.productService.products$
+  products$ = this.productService.productWithCategory$
+  .pipe(
+    tap(data => console.log(data)),
+    catchError((err) => {
+      this.errorMessage = err;
+      return EMPTY
+    }
+    )
+  )
 
 
   onSelected(productId: number): void {

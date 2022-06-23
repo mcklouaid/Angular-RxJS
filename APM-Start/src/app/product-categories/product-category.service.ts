@@ -13,9 +13,11 @@ export class ProductCategoryService {
   
   $productCategories$: Observable<ProductCategory[]> = this.http.get<ProductCategory[]>(this.productCategoriesUrl)
   .pipe(
-    tap(data => console.log(JSON.stringify(data))),
+    tap((data: any) => console.log(JSON.stringify(data))),
     catchError(this.handleError)
   )
+
+  
   
   constructor(private http: HttpClient) { }
 
