@@ -1,12 +1,12 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 
 import { BehaviorSubject, catchError, combineLatest, filter, forkJoin, map, merge, Observable, of, scan, shareReplay, Subject, switchMap, tap, throwError } from 'rxjs';
 
-import { Product } from './product';
 import { ProductCategoryService } from '../product-categories/product-category.service';
-import { SupplierService } from '../suppliers/supplier.service';
 import { Supplier } from '../suppliers/supplier';
+import { SupplierService } from '../suppliers/supplier.service';
+import { Product } from './product';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +17,7 @@ export class ProductService {
 
   products$ = this.http.get<Product[]>(this.productsUrl)
     .pipe(
-      tap(data => console.log('Products: ', JSON.stringify(data))),
+      tap((data: any) => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
 
@@ -26,10 +26,10 @@ export class ProductService {
     this.productCategoryService.productCategories$
   ]).pipe(
     map(([products, categories]) =>
-      products.map(product => ({
+      products.map((product: Product) => ({
         ...product,
         price: product.price ? product.price * 1.5 : 0,
-        category: categories.find(c => product.categoryId === c.id)?.name,
+        category: categories.find((c: { id: any; }) => product.categoryId === c.id)?.name,
         searchKey: [product.productName]
       } as Product))
     ),
@@ -44,9 +44,9 @@ export class ProductService {
     this.productSelectedAction$
   ]).pipe(
     map(([products, selectedProductId]) =>
-      products.find(product => product.id === selectedProductId)
+      products.find((product: { id: any; }) => product.id === selectedProductId)
     ),
-    tap(product => console.log('selectedProduct', product)),
+    tap((product: any) => console.log('selectedProduct', product)),
     shareReplay(1)
   );
 
@@ -61,16 +61,16 @@ export class ProductService {
 
   selectedProductSuppliers$ = this.selectedProduct$
     .pipe(
-      filter(product => Boolean(product)),
-      switchMap(selectedProduct => {
+      filter((product: any) => Boolean(product)),
+      switchMap((selectedProduct: { supplierIds: any[]; }) => {
         if (selectedProduct?.supplierIds) {
-          return forkJoin(selectedProduct.supplierIds.map(supplierId =>
+          return forkJoin(selectedProduct.supplierIds.map((supplierId: any) =>
             this.http.get<Supplier>(`${this.suppliersUrl}/${supplierId}`)))
         } else {
           return of([]);
         }
       }),
-      tap(suppliers => console.log('product suppliers', JSON.stringify(suppliers)))
+      tap((suppliers: any) => console.log('product suppliers', JSON.stringify(suppliers)))
     );
 
   private productInsertedSubject = new Subject<Product>();
@@ -80,7 +80,7 @@ export class ProductService {
     this.productsWithCategory$,
     this.productInsertedAction$
   ).pipe(
-    scan((acc, value) =>
+    scan((acc: any, value: any) =>
       (value instanceof Array) ? [...value] : [...acc, value], [] as Product[])
   )
 

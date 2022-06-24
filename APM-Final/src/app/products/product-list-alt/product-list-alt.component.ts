@@ -15,7 +15,7 @@ export class ProductListAltComponent {
 
   products$ = this.productService.productsWithCategory$
     .pipe(
-      catchError(err => {
+      catchError((err : string) => {
         this.errorMessageSubject.next(err);
         return EMPTY;
       })
