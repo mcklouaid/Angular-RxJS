@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { BehaviorSubject, catchError, combineLatest, map, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, map, merge, Observable, scan, Subject, throwError } from 'rxjs';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 
 import { Product } from './product';
@@ -19,7 +19,6 @@ export class ProductService {
 
   products$ = this.http.get<Product[]>(this.productsUrl)
     .pipe(
-      //tap(data => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
 
@@ -39,6 +38,13 @@ export class ProductService {
 
   private productSelectedSubject = new BehaviorSubject<number>(0);
   productSelectedAction$ = this.productSelectedSubject.asObservable();
+  
+  selectedProductChanged(selectedProductId: number){
+    this.productSelectedSubject.next(selectedProductId);
+  }
+
+  private productInsertedSubject = new Subject<Product>();
+  productInsertedAction$ = this.productInsertedSubject.asObservable();
 
   selectedProduct$ = combineLatest([
     this.productWithCategory$,
@@ -50,23 +56,30 @@ export class ProductService {
   //tap(product => console.log('selectedProduct', product))
   );
 
+   productWithAdd$ = merge(
+    this.productWithCategory$,
+    this.productInsertedAction$
+   ).pipe(
+    scan((acc, value) => (value instanceof Array) ? [...value] : [...acc, value], [] as Product[]),
+   )
 
-selectedProductChanged(selectedProductId: number){
-  this.productSelectedSubject.next(selectedProductId);
-}
-
-  // private fakeProduct(): Product {
-  //   return {
-  //     id: 42,
-  //     productName: 'Another One',
-  //     productCode: 'TBX-0042',
-  //     description: 'Our new product',
-  //     price: 8.9,
-  //     categoryId: 3,
-  //     // category: 'Toolbox',
-  //     quantityInStock: 30
-  //   };
-  // }
+   addProduct(newProduct?: Product){
+    newProduct = newProduct || this.fakeProduct();
+    this.productInsertedSubject.next(newProduct);
+   }
+   
+  private fakeProduct(): Product {
+    return {
+      id: 42,
+      productName: 'Another One',
+      productCode: 'TBX-0042',
+      description: 'Our new product',
+      price: 8.9,
+      categoryId: 3,
+      category: 'Toolbox',
+      quantityInStock: 30
+    };
+  }
 
   private handleError(err: HttpErrorResponse): Observable<never> {
     // in a real world app, we may send the server to some remote logging infrastructure

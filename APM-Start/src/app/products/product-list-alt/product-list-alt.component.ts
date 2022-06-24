@@ -11,11 +11,10 @@ import { ProductService } from '../product.service';
 export class ProductListAltComponent {
   pageTitle = 'Products';
   errorMessage = '';
- 
-
   products: Product[] = [];
-
   selectedProduct$ = this.productService.selectedProduct$;
+
+  
   
   constructor(private productService: ProductService) { }
 
